@@ -1,5 +1,7 @@
 # Wix Image Optimizer
 
+**Live:** https://wix-image-optimizer.onrender.com
+
 Shrink photos before uploading them to Wix, without a visible quality cost.
 
 Everything runs in the browser. No file is uploaded, there is no server, no
