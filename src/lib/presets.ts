@@ -47,12 +47,30 @@ export const WIX_MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
 
 const JPEG_DEFAULTS = {
   format: "jpeg",
-  // Provisional until bench/run.ts lands; see RESEARCH.md for the final call.
-  quality: 90,
-  // 4:4:4 matters here specifically because Wix re-encodes: chroma resolution
-  // thrown away on upload cannot be recovered by their encoder.
+  /**
+   * The knee, measured over 12 photos from a real client delivery. Going up
+   * to q88 buys 0.3 SSIMULACRA2 for 49% more bytes; dropping to q72 saves 26%
+   * for 1.6 points. See RESEARCH.md.
+   */
+  quality: 80,
+  /**
+   * 4:4:4 matters here specifically because Wix re-encodes: chroma resolution
+   * thrown away on upload cannot be recovered by their encoder.
+   */
   chroma: "4:4:4",
-  sharpen: 1,
+  /**
+   * Off, which is the opposite of the usual advice about downscaling — and
+   * the measurements are unambiguous. Wix applies its own unsharp mask
+   * (usm_0.66_1.00_0.01) on every `fit` transform, which is what the editor
+   * emits, so anything we add stacks on top of theirs. At 3840px the cost of
+   * sharpening at 1.0 versus not sharpening at all is 8.6 SSIMULACRA2 at a
+   * full-bleed hero and 5.0 in-content, and the sharpened file is also
+   * larger. Not sharpening is strictly better on both axes.
+   *
+   * The knob is still exposed: this holds because Wix sharpens for us, and
+   * would not for output headed anywhere else.
+   */
+  sharpen: 0,
 } as const satisfies Omit<EncodeSettings, "maxLongEdge">;
 
 export const PRESETS: readonly Preset[] = [
