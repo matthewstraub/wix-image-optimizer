@@ -1,0 +1,12 @@
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Benchmark working files: inputs are the user's photos, outputs are large.
+bench/fixtures/
+bench/out/
+bench/results/
+
+.DS_Store
+.env
+.env.local
