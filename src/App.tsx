@@ -5,6 +5,7 @@ import TotalsBar from "./components/TotalsBar";
 import FileTable from "./components/FileTable";
 import ComparisonView from "./components/ComparisonView";
 import WhyJpeg from "./components/WhyJpeg";
+import ThemeToggle from "./components/ThemeToggle";
 import { EncodePool } from "./workers/pool";
 import { blobReader, probe } from "./lib/probe";
 import { BROWSER_MAX_MEGAPIXELS } from "./lib/budget";
@@ -251,14 +252,17 @@ export default function App() {
 
   return (
     <div className="mx-auto flex min-h-full max-w-6xl flex-col gap-6 p-6">
-      <header>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Wix Image Optimizer
-        </h1>
-        <p className="mt-1 max-w-2xl text-sm text-neutral-600 dark:text-neutral-400">
-          Shrink photos before uploading them to Wix. Everything runs in this
-          tab — no file is ever sent anywhere.
-        </p>
+      <header className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Wix Image Optimizer
+          </h1>
+          <p className="mt-1 max-w-2xl text-sm text-neutral-600 dark:text-neutral-400">
+            Shrink photos before uploading them to Wix. Everything runs in this
+            tab — no file is ever sent anywhere.
+          </p>
+        </div>
+        <ThemeToggle />
       </header>
 
       <DropZone onFiles={addFiles} busy={running} />

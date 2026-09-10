@@ -1,30 +1,55 @@
 @import "tailwindcss";
 
-@theme {
-  --color-ink: oklch(0.22 0.02 260);
-  --color-paper: oklch(0.99 0.003 260);
-}
+/*
+ * Drive `dark:` from a class on <html> rather than the default
+ * `prefers-color-scheme` media query, so an explicit choice can override the
+ * OS setting. src/lib/theme.ts owns that class.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
 
-:root {
-  color-scheme: light dark;
-}
+@layer base {
+  /*
+   * Explicit page surfaces. Without these the page falls back to the
+   * browser's default canvas, which in dark mode is pure black — every card
+   * then floats on #000 with nothing behind it. neutral-950 gives the
+   * neutral-900 cards something to sit on.
+   */
+  html {
+    background-color: var(--color-white);
+    color: var(--color-neutral-900);
+  }
 
-html,
-body,
-#root {
-  height: 100%;
-}
+  html.dark {
+    background-color: var(--color-neutral-950);
+    color: var(--color-neutral-100);
+  }
 
-body {
-  margin: 0;
-  font-family:
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    "Segoe UI",
-    Roboto,
-    sans-serif;
-  font-feature-settings: "tnum" 1;
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    font-family:
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      "Segoe UI",
+      Roboto,
+      sans-serif;
+  }
+
+  /* Respect a reduced-motion preference for the few transitions we have. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
+  }
 }
 
 /* Numeric columns line up only if the digits are tabular. */

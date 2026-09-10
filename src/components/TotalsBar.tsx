@@ -88,7 +88,10 @@ export default function TotalsBar({
               type="button"
               onClick={onOptimise}
               disabled={totals.files === totals.done + totals.skipped}
-              className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-40"
+              // A flat opacity knock-down leaves blue-on-near-black unreadable,
+              // so the disabled state gets its own colours rather than a
+              // faded version of the enabled ones.
+              className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white enabled:hover:bg-blue-500 disabled:bg-neutral-200 disabled:text-neutral-500 dark:disabled:bg-neutral-800 dark:disabled:text-neutral-500"
             >
               Optimize {settings.maxLongEdge}px q{settings.quality}
             </button>

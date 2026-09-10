@@ -56,6 +56,8 @@ did not go the way the literature suggested.
   47 KB of EXIF, ICC, XMP and IPTC, including GPS.
 - **Save to a folder** (Chrome and Edge), streamed straight to disk, or
   **download a ZIP** everywhere else.
+- **Light and dark**, following the system setting by default, with a
+  Light / Auto / Dark switch that overrides it and persists.
 
 ## Presets
 
