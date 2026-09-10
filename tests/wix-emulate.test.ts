@@ -72,18 +72,35 @@ describe("wixFit", () => {
   });
 
   it("handles a portrait source", () => {
+    // 8152 * 1920/5435 = 2879.83, floored.
     const out = wixFit({ width: 5435, height: 8152 }, 1920);
-    expect(out).toEqual({ width: 1920, height: 2880 });
+    expect(out).toEqual({ width: 1920, height: 2879 });
+  });
+
+  it("floors the derived edge, as Wix does", () => {
+    // Verified against live derivatives of a 1824x1270 asset. Rounding would
+    // give 279 / 627 / 766 and be one pixel out.
+    const source = { width: 1824, height: 1270 };
+    expect(wixFit(source, 400)).toEqual({ width: 400, height: 278 });
+    expect(wixFit(source, 900)).toEqual({ width: 900, height: 626 });
+    expect(wixFit(source, 1100)).toEqual({ width: 1100, height: 765 });
+    // And agrees with rounding where flooring is not the difference.
+    expect(wixFit(source, 500)).toEqual({ width: 500, height: 348 });
+    expect(wixFit(source, 1300)).toEqual({ width: 1300, height: 905 });
   });
 });
 
 describe("wixAppliesUsm", () => {
   it("sharpens when downscaling", () => {
-    expect(wixAppliesUsm({ width: 6000, height: 4000 }, { width: 1920, height: 1280 })).toBe(true);
+    expect(wixAppliesUsm({ width: 6000, height: 4000 }, { width: 1920, height: 1280 }, "fill")).toBe(true);
   });
 
-  it("does not sharpen when the render matches the source", () => {
-    expect(wixAppliesUsm({ width: 1920, height: 1280 }, { width: 1920, height: 1280 })).toBe(false);
+  it("sharpens a fit transform even at native size, per isUSMNeeded", () => {
+    // The editor emits `fit`, and its clause in isUSMNeeded is unconditional.
+    // Modelling this was what made calibration line up.
+    const same = { width: 1920, height: 1280 };
+    expect(wixAppliesUsm(same, same, "fit")).toBe(true);
+    expect(wixAppliesUsm(same, same, "fill")).toBe(false);
   });
 });
 
@@ -100,6 +117,7 @@ describe("wixDelivery", () => {
 
   it("models a full-bleed hero on a retina desktop", () => {
     const d = wixDelivery({ source, cssWidth: 1920 });
+    // 5827 * 3840/7769 = 2880.02, so flooring lands on 2880 here.
     expect(d.rendered).toEqual({ width: 3840, height: 2880 });
     expect(d.format).toBe("avif");
     expect(d.applyUsm).toBe(true);
@@ -129,10 +147,16 @@ describe("wixDelivery", () => {
     expect(d.quality).toBe(85);
   });
 
-  it("stops sharpening once our upload is already at the render size", () => {
+  it("still sharpens a fit delivery at native size", () => {
     const upload = { width: 2560, height: 1920 };
     const d = wixDelivery({ source: upload, cssWidth: 1280 });
     expect(d.rendered).toEqual(upload);
+    expect(d.applyUsm).toBe(true);
+  });
+
+  it("skips the sharpen for a fill delivery at native size", () => {
+    const upload = { width: 2560, height: 1920 };
+    const d = wixDelivery({ source: upload, cssWidth: 1280, transform: "fill" });
     expect(d.applyUsm).toBe(false);
   });
 });

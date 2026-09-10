@@ -95,33 +95,57 @@ export function wixDevicePixels(cssWidth: number, dpr: number): number {
  * The size Wix's `fit` transform produces: scale into the requested box
  * preserving aspect ratio, never upscale, then pull back inside the 5000px /
  * 25MP transform ceiling.
+ *
+ * Wix floors the derived edge rather than rounding it. Measured against live
+ * derivatives of a 1824x1270 asset, where the two disagree:
+ *
+ *   w_400  -> 400x278  (exact 278.509, round would give 279)
+ *   w_900  -> 900x626  (exact 626.645, round would give 627)
+ *   w_1100 -> 1100x765 (exact 765.899, round would give 766)
+ *
+ * Being one pixel out is not cosmetic here: the metrics compare arrays and
+ * refuse to score mismatched shapes.
  */
 export function wixFit(source: Size, requestedWidth: number): Size {
   const width = Math.min(requestedWidth, source.width);
   const scale = width / source.width;
-  let w = Math.max(1, Math.round(source.width * scale));
-  let h = Math.max(1, Math.round(source.height * scale));
+  let w = Math.max(1, Math.floor(source.width * scale));
+  let h = Math.max(1, Math.floor(source.height * scale));
 
   const edge = Math.max(w, h);
   if (edge > WIX_MAX_TRANSFORM_EDGE) {
     const k = WIX_MAX_TRANSFORM_EDGE / edge;
-    w = Math.max(1, Math.round(w * k));
-    h = Math.max(1, Math.round(h * k));
+    w = Math.max(1, Math.floor(w * k));
+    h = Math.max(1, Math.floor(h * k));
   }
   if (w * h > WIX_SAFE_AREA) {
     const k = Math.sqrt(WIX_SAFE_AREA / (w * h));
-    w = Math.max(1, Math.round(w * k));
-    h = Math.max(1, Math.round(h * k));
+    w = Math.max(1, Math.floor(w * k));
+    h = Math.max(1, Math.floor(h * k));
   }
   return { width: w, height: h };
 }
 
+export type WixTransformType = "fit" | "fill" | "crop";
+
 /**
- * `isUSMNeeded`: applied when downscaling, and unconditionally for `fit`
- * transforms — which is what the editor emits — so in practice this is on
- * whenever the source is larger than the render.
+ * `isUSMNeeded`, transcribed from imageTransformOptions.js:
+ *
+ *   const upscale = transformPart.scaleFactor >= 1;
+ *   return !upscale || transformPart.forceUSM ||
+ *          transformPart.transformType === transformTypes.FIT;
+ *
+ * The `fit` clause is the surprising one and it is not an edge case: `fit` is
+ * what the editor emits, so Wix sharpens even when it is handing back the
+ * source at its own native size. Calibration against live derivatives only
+ * lined up once this was modelled.
  */
-export function wixAppliesUsm(source: Size, rendered: Size): boolean {
+export function wixAppliesUsm(
+  source: Size,
+  rendered: Size,
+  transform: WixTransformType = "fit"
+): boolean {
+  if (transform === "fit") return true;
   return rendered.width < source.width || rendered.height < source.height;
 }
 
@@ -160,6 +184,8 @@ export interface WixDeliveryRequest {
   /** An explicit `q_`, which AVIF's `quality_auto` will override anyway. */
   requestedQuality?: number;
   png?: boolean;
+  /** Editor-generated URLs use `fit` for content and `fill` for crops. */
+  transform?: WixTransformType;
 }
 
 /**
@@ -187,7 +213,7 @@ export function wixDelivery(req: WixDeliveryRequest): WixDelivery {
     quality: qualityAuto
       ? WIX_AUTO_QUALITY
       : wixEffectiveQuality(req.requestedQuality, area, req.png),
-    applyUsm: wixAppliesUsm(req.source, rendered),
+    applyUsm: wixAppliesUsm(req.source, rendered, req.transform ?? "fit"),
     qualityAuto,
   };
 }
