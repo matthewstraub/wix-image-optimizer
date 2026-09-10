@@ -22,10 +22,10 @@ Any Wix URL containing a `/v1/` transform — which is all of them on a real
 site — is decoded and re-encoded on the way out, even at the source's own
 native resolution. Measured live on a 5000×2184 asset:
 
-| Request | Output pixels | Bytes |
-| --- | --- | --- |
-| Bare URL, no `/v1/` | 5000×2184 | 4,889,258 — the original, byte for byte |
-| `/v1/fit/w_5000,h_5000` | 5000×2184 | 1,502,892 |
+| Request                 | Output pixels | Bytes                                   |
+| ----------------------- | ------------- | --------------------------------------- |
+| Bare URL, no `/v1/`     | 5000×2184     | 4,889,258 — the original, byte for byte |
+| `/v1/fit/w_5000,h_5000` | 5000×2184     | 1,502,892                               |
 
 Same pixels, 31% of the weight. So uploading WebP or AVIF buys nothing — Wix
 converts to AVIF on the way out regardless — and feeding an already-lossy file
@@ -57,14 +57,18 @@ did not go the way the literature suggested.
 
 ## Presets
 
-| Preset | Long edge | For |
-| --- | --- | --- |
-| Hero / full-bleed | 3840px | Full-width banners — true 2× for a 1920px desktop hero |
-| **Standard** | **2560px** | Blog, content and most galleries. Matches Wix's own stated minimum |
-| Gallery / thumbnail | 1600px | Grid thumbnails and cards |
+| Preset              | Long edge  | For                                                                |
+| ------------------- | ---------- | ------------------------------------------------------------------ |
+| Hero / full-bleed   | 3840px     | Full-width banners — true 2× for a 1920px desktop hero             |
+| **Standard**        | **2560px** | Blog, content and most galleries. Matches Wix's own stated minimum |
+| Gallery / thumbnail | 1600px     | Grid thumbnails and cards                                          |
 
-Output is JPEG (MozJPEG, progressive, 4:4:4), sRGB, no metadata. Images with
-transparency stay lossless PNG rather than being flattened onto white.
+All at quality 80, JPEG (MozJPEG, progressive, 4:4:4), sRGB, no metadata, and
+**no sharpening** — Wix applies its own unsharp mask on every transform, so
+adding ours made files both larger and worse. Images with transparency stay
+lossless PNG rather than being flattened onto white.
+
+On the source folder above, Standard projects to about **1.0 GB from 8.05 GB**.
 
 ## Running it locally
 
@@ -72,16 +76,16 @@ transparency stay lossless PNG rather than being flattened onto white.
 npm install && npm run dev
 ```
 
-| Command | What it does |
-| --- | --- |
-| `npm run dev` | Vite dev server |
-| `npm run build` | Production build into `dist/` |
-| `npm test` | Vitest, including browser/CLI pipeline parity |
-| `npm run typecheck` | `tsc --noEmit` |
-| `npm run lint` | ESLint |
-| `npm run optimize -- <dir>` | The CLI (see below) |
-| `npm run bench` | The quality sweep behind the presets |
-| `npm run bench:calibrate` | Check the Wix model against the live CDN |
+| Command                     | What it does                                  |
+| --------------------------- | --------------------------------------------- |
+| `npm run dev`               | Vite dev server                               |
+| `npm run build`             | Production build into `dist/`                 |
+| `npm test`                  | Vitest, including browser/CLI pipeline parity |
+| `npm run typecheck`         | `tsc --noEmit`                                |
+| `npm run lint`              | ESLint                                        |
+| `npm run optimize -- <dir>` | The CLI (see below)                           |
+| `npm run bench`             | The quality sweep behind the presets          |
+| `npm run bench:calibrate`   | Check the Wix model against the live CDN      |
 
 ## The command line tool
 
@@ -95,17 +99,17 @@ tree the same way.
 npm run optimize -- "~/Downloads/Wedding Photos (Grouped)" --out ./web-ready
 ```
 
-| Flag | Default | |
-| --- | --- | --- |
-| `--out <dir>` | `<input>-optimized` | Output root |
-| `--preset <id>` | `standard` | `hero`, `standard` or `gallery` |
-| `--suffix <text>` | `optimized` | Empty string for none |
-| `--quality <1-100>` | from preset | |
-| `--max-long-edge <px>` | from preset | Capped at Wix's 5000px ceiling |
-| `--format <fmt>` | `jpeg` | `jpeg`, `webp`, `avif`, `png` |
-| `--sharpen <0-3>` | `1` | 0 disables |
-| `--concurrency <n>` | CPU count | |
-| `--dry-run` | | Show the output paths and stop |
+| Flag                   | Default             |                                 |
+| ---------------------- | ------------------- | ------------------------------- |
+| `--out <dir>`          | `<input>-optimized` | Output root                     |
+| `--preset <id>`        | `standard`          | `hero`, `standard` or `gallery` |
+| `--suffix <text>`      | `optimized`         | Empty string for none           |
+| `--quality <1-100>`    | from preset         |                                 |
+| `--max-long-edge <px>` | from preset         | Capped at Wix's 5000px ceiling  |
+| `--format <fmt>`       | `jpeg`              | `jpeg`, `webp`, `avif`, `png`   |
+| `--sharpen <0-3>`      | `0`                 | Off; Wix sharpens for you       |
+| `--concurrency <n>`    | CPU count           |                                 |
+| `--dry-run`            |                     | Show the output paths and stop  |
 
 ## Deploying to Render
 
@@ -115,10 +119,10 @@ free static site.
 
 To set it up by hand instead, create a **New → Static Site** with:
 
-| Setting | Value |
-| --- | --- |
-| Build command | `npm ci && npm run build` |
-| Publish directory | `dist` |
+| Setting           | Value                     |
+| ----------------- | ------------------------- |
+| Build command     | `npm ci && npm run build` |
+| Publish directory | `dist`                    |
 
 Every push to `main` redeploys.
 

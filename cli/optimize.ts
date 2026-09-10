@@ -55,7 +55,7 @@ Options:
   --quality <1-100>      Override the preset's quality
   --max-long-edge <px>   Override the preset's longest side
   --format <fmt>         jpeg | webp | avif | png (default: jpeg)
-  --sharpen <0-3>        Unsharp amount; 0 disables (default: 1)
+  --sharpen <0-3>        Unsharp amount (default: 0 — Wix sharpens for you)
   --concurrency <n>      Files in flight (default: CPU count)
   --dry-run              Report what would happen without writing
   --help

@@ -22,5 +22,12 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "cli", "bench", "tests", "vite.config.ts", "vitest.config.ts"]
+  "include": [
+    "src",
+    "cli",
+    "bench",
+    "tests",
+    "vite.config.ts",
+    "vitest.config.ts"
+  ]
 }
