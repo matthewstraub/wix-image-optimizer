@@ -1,0 +1,25 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+#
+# A static site. All the image work happens in the visitor's browser, so there
+# is no server to run and nothing is ever uploaded.
+services:
+  - type: web
+    name: wix-image-optimizer
+    runtime: static
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: no-referrer
+      # The codec WebAssembly is several megabytes and content-hashed, so it
+      # should be cached hard. The HTML must not be, or a redeploy is invisible.
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /index.html
+        name: Cache-Control
+        value: no-cache

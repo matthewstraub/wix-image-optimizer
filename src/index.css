@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: oklch(0.22 0.02 260);
+  --color-paper: oklch(0.99 0.003 260);
+}
+
+:root {
+  color-scheme: light dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Numeric columns line up only if the digits are tabular. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}

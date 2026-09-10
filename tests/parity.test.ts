@@ -50,11 +50,9 @@ async function decodeWithSharp(path: string) {
 
 /** Mean absolute per-channel difference, 0-255. */
 async function meanAbsDiff(a: Uint8Array, b: Uint8Array): Promise<number> {
-  const [left, right] = await Promise.all(
-    [a, b].map(bytes =>
-      sharp(bytes).removeAlpha().raw().toBuffer({ resolveWithObject: true })
-    )
-  );
+  const raw = (bytes: Uint8Array) =>
+    sharp(bytes).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  const [left, right] = await Promise.all([raw(a), raw(b)]);
   expect(left.info.width).toBe(right.info.width);
   expect(left.info.height).toBe(right.info.height);
   let total = 0;
@@ -76,9 +74,13 @@ describe("browser and CLI pipelines agree", () => {
   it("produce the same output dimensions", async () => {
     for (const path of paths) {
       const viaSharp = await processImage(path, settings);
-      const viaBrowser = await processRgba(await decodeWithSharp(path), settings, {
-        canHaveAlpha: false,
-      });
+      const viaBrowser = await processRgba(
+        await decodeWithSharp(path),
+        settings,
+        {
+          canHaveAlpha: false,
+        }
+      );
       expect(viaBrowser.width).toBe(viaSharp.width);
       expect(viaBrowser.height).toBe(viaSharp.height);
       expect(Math.max(viaBrowser.width, viaBrowser.height)).toBe(
@@ -90,9 +92,13 @@ describe("browser and CLI pipelines agree", () => {
   it("land within 25% of each other on file size", async () => {
     for (const path of paths) {
       const viaSharp = await processImage(path, settings);
-      const viaBrowser = await processRgba(await decodeWithSharp(path), settings, {
-        canHaveAlpha: false,
-      });
+      const viaBrowser = await processRgba(
+        await decodeWithSharp(path),
+        settings,
+        {
+          canHaveAlpha: false,
+        }
+      );
       const ratio = viaBrowser.bytes.byteLength / viaSharp.data.byteLength;
       expect(ratio).toBeGreaterThan(0.75);
       expect(ratio).toBeLessThan(1.25);
@@ -123,9 +129,13 @@ describe("browser and CLI pipelines agree", () => {
 
   it("both emit progressive 4:4:4 sRGB JPEG with no metadata", async () => {
     const path = paths[0]!;
-    const viaBrowser = await processRgba(await decodeWithSharp(path), settings, {
-      canHaveAlpha: false,
-    });
+    const viaBrowser = await processRgba(
+      await decodeWithSharp(path),
+      settings,
+      {
+        canHaveAlpha: false,
+      }
+    );
     const meta = await sharp(viaBrowser.bytes).metadata();
     expect(meta.format).toBe("jpeg");
     expect(meta.space).toBe("srgb");

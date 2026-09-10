@@ -132,7 +132,9 @@ async function main(): Promise<void> {
 
   const presetId = (values.preset ?? DEFAULT_PRESET_ID) as PresetId;
   if (!PRESETS.some(p => p.id === presetId)) {
-    console.error(`Unknown preset "${presetId}". Expected one of: ${PRESETS.map(p => p.id).join(", ")}`);
+    console.error(
+      `Unknown preset "${presetId}". Expected one of: ${PRESETS.map(p => p.id).join(", ")}`
+    );
     process.exit(1);
   }
 
@@ -143,7 +145,9 @@ async function main(): Promise<void> {
     ...(values["max-long-edge"]
       ? { maxLongEdge: Number(values["max-long-edge"]) }
       : {}),
-    ...(values.sharpen !== undefined ? { sharpen: Number(values.sharpen) } : {}),
+    ...(values.sharpen !== undefined
+      ? { sharpen: Number(values.sharpen) }
+      : {}),
   });
   const suffix = values.suffix ?? "optimized";
 
@@ -161,7 +165,9 @@ async function main(): Promise<void> {
   );
   if (values["dry-run"]) {
     for (const job of jobs.slice(0, 10)) {
-      console.log(`  ${job.relativePath}\n    -> ${outputRelativePath(job.relativePath, { suffix, ext: "jpg" })}`);
+      console.log(
+        `  ${job.relativePath}\n    -> ${outputRelativePath(job.relativePath, { suffix, ext: "jpg" })}`
+      );
     }
     if (jobs.length > 10) console.log(`  ... and ${jobs.length - 10} more`);
     return;
@@ -198,11 +204,19 @@ async function main(): Promise<void> {
           writtenBytes += result.data.byteLength;
           if (job.bytes > WIX_MAX_UPLOAD_BYTES) oversized++;
           done++;
-          report(done + failed, jobs.length, job.relativePath, job.bytes, result.data.byteLength);
+          report(
+            done + failed,
+            jobs.length,
+            job.relativePath,
+            job.bytes,
+            result.data.byteLength
+          );
         } catch (error) {
           failed++;
           process.stdout.write("\r\x1b[K");
-          console.error(`  failed: ${job.relativePath} - ${(error as Error).message}`);
+          console.error(
+            `  failed: ${job.relativePath} - ${(error as Error).message}`
+          );
         }
       })
     )

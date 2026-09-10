@@ -123,7 +123,11 @@ function encodeWith(
     case "webp":
       // Lossy WebP is always 4:2:0; smartSubsample is the only mitigation and
       // costs about 2.5% at low quality, nothing at high.
-      return img.webp({ quality: settings.quality, effort: 6, smartSubsample: true });
+      return img.webp({
+        quality: settings.quality,
+        effort: 6,
+        smartSubsample: true,
+      });
     case "avif":
       return img.avif({
         quality: settings.quality,

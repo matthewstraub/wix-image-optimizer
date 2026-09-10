@@ -129,7 +129,9 @@ function bitmapToRgba(bitmap: ImageBitmap): RgbaImage {
 async function decodeHeic(request: DecodeRequest): Promise<RgbaImage> {
   const { default: libheif } = await import("libheif-js/wasm-bundle");
   const decoder = new libheif.HeifDecoder();
-  const images = decoder.decode(new Uint8Array(await request.blob.arrayBuffer()));
+  const images = decoder.decode(
+    new Uint8Array(await request.blob.arrayBuffer())
+  );
   const image = images[0];
   if (!image) throw new UnsupportedImageError("No image in the HEIC container");
 

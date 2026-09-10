@@ -33,8 +33,7 @@ export function initJsquashForNode(): Promise<void> {
   ready ??= (async () => {
     (globalThis as Record<string, unknown>).ImageData ??= NodeImageData;
 
-    const bytes = (specifier: string) =>
-      readFile(require.resolve(specifier));
+    const bytes = (specifier: string) => readFile(require.resolve(specifier));
 
     const { initResize } = await import("@jsquash/resize");
     await initResize(

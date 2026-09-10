@@ -54,6 +54,10 @@ export function slugify(input: string): string {
  */
 export function sanitizeDirName(name: string): string {
   const cleaned = name
+    // The control-character range is the point: these are illegal in a path
+    // segment on every filesystem, and a folder name arriving from a drop is
+    // not something we control.
+    // eslint-disable-next-line no-control-regex
     .replace(/[\u0000-\u001f<>:"|?*\\/]+/g, "-")
     .replace(/\s+/g, " ")
     .replace(/^[.\s]+|[.\s]+$/g, "")
