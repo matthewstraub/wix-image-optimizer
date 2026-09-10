@@ -153,13 +153,22 @@ Not sharpening is **strictly dominant** — smaller files _and_ better quality,
 at every resolution tested. At 2560px the same pattern holds: −19.9 at
 sharpen 0 against −28.5 at sharpen 1.
 
-The mechanism is visible in the per-photo spread. Before this was found, the
-worst cases were all landscape frames and the best were all portrait. At a
-1920×1080 hero, a landscape photo is barely reduced further by Wix (1.2×), so
-our sharpening survives into the final render on top of theirs; a portrait
-photo gets reduced 1.8× more, which washes the double-sharpening out. Quality
-made almost no difference to the effect, which is what ruled out compression
-artifacts as the cause.
+The mechanism is visible in the per-photo spread, which is how it was found:
+the three worst frames were all landscape and the seven best were all
+portrait. Orientation decides how much reduction Wix still has left to do. At
+a 1920×1080 hero a landscape photo is barely reduced further (1.2×), so our
+sharpening survives into the final render stacked on theirs; a portrait photo
+gets reduced about 1.8× more, which washes the double-sharpening out.
+
+Turning sharpening on at 3840px costs, at a hero:
+
+| Orientation | Mean points lost | Range      |
+| ----------- | ---------------- | ---------- |
+| Landscape   | 14.3             | 3.3 – 24.3 |
+| Portrait    | 5.8              | 0.2 – 13.7 |
+
+Quality made almost no difference to the effect, which is what ruled out
+compression artifacts as the cause.
 
 The control is still exposed in the Advanced panel and as `--sharpen` on the
 CLI, because this conclusion depends on Wix sharpening for us.
