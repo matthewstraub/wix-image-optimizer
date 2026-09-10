@@ -71,8 +71,13 @@ export async function processImage(
     .resize({
       width: target.width,
       height: target.height,
-      fit: "inside",
-      withoutEnlargement: true,
+      // "fill" rather than "inside" so the output is exactly what
+      // targetDimensions computed. "inside" lets sharp re-derive the box and
+      // land a pixel away from what the browser pipeline produces for the
+      // same input, which then makes the two incomparable. The dimensions
+      // already preserve aspect ratio to within that same rounding, and
+      // targetDimensions never enlarges, so nothing is stretched or upscaled.
+      fit: "fill",
       kernel: "lanczos3",
       // Shrink-on-load is faster but introduces artifacts we would then
       // sharpen; this pipeline is quality-critical.

@@ -8,13 +8,7 @@
  */
 
 export type ImageKind =
-  | "jpeg"
-  | "png"
-  | "heic"
-  | "avif"
-  | "tiff"
-  | "webp"
-  | "gif";
+  "jpeg" | "png" | "heic" | "avif" | "tiff" | "webp" | "gif";
 
 export interface ProbeResult {
   kind: ImageKind;
@@ -218,7 +212,9 @@ function readTiffIfd(
     const type = view.getUint16(entry + 2, le);
     // SHORT occupies the first 2 bytes of the value field, LONG all 4.
     const value =
-      type === 3 ? view.getUint16(entry + 8, le) : view.getUint32(entry + 8, le);
+      type === 3
+        ? view.getUint16(entry + 8, le)
+        : view.getUint32(entry + 8, le);
     if (tag === 256) width = value;
     else height = value;
   }
@@ -233,7 +229,8 @@ function readTiffIfd(
  */
 function probeIsoBmff(bytes: Uint8Array, view: DataView): ProbeResult | null {
   const brand = ascii(bytes, 8, 4);
-  const kind: ImageKind = brand === "avif" || brand === "avis" ? "avif" : "heic";
+  const kind: ImageKind =
+    brand === "avif" || brand === "avis" ? "avif" : "heic";
 
   let best: { w: number; h: number } | null = null;
   for (let p = 0; p + 20 <= bytes.length; p++) {

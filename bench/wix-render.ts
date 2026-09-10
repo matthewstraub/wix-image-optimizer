@@ -37,7 +37,8 @@ export interface RenderedDelivery {
 }
 
 export interface RenderOptions {
-  cssWidth: number;
+  /** The CSS box the image occupies on the page. */
+  css: Size;
   dpr?: number;
   accept?: string;
   /** Override the fitted AVIF quality, for the calibration sweep itself. */
@@ -52,25 +53,22 @@ export async function renderAsWix(
 ): Promise<RenderedDelivery> {
   const delivery = wixDelivery({
     source,
-    cssWidth: options.cssWidth,
+    css: options.css,
     ...(options.dpr !== undefined ? { dpr: options.dpr } : {}),
     ...(options.accept !== undefined ? { accept: options.accept } : {}),
   });
 
-  let img = openSource(input)
-    .autoOrient()
-    .pipelineColourspace("rgb16")
-    .resize({
-      width: delivery.rendered.width,
-      height: delivery.rendered.height,
-      // "fill" rather than "inside" so the output is exactly the size wixFit
-      // computed. The dimensions already preserve aspect ratio up to Wix's own
-      // flooring, and letting sharp re-derive them reintroduces the one-pixel
-      // disagreement that stops the metrics from scoring at all.
-      fit: "fill",
-      kernel: "lanczos3",
-      fastShrinkOnLoad: false,
-    });
+  let img = openSource(input).autoOrient().pipelineColourspace("rgb16").resize({
+    width: delivery.rendered.width,
+    height: delivery.rendered.height,
+    // "fill" rather than "inside" so the output is exactly the size wixFit
+    // computed. The dimensions already preserve aspect ratio up to Wix's own
+    // flooring, and letting sharp re-derive them reintroduces the one-pixel
+    // disagreement that stops the metrics from scoring at all.
+    fit: "fill",
+    kernel: "lanczos3",
+    fastShrinkOnLoad: false,
+  });
 
   if (delivery.applyUsm) {
     img = img.sharpen(toLibvipsSharpen(WIX_USM, 1));

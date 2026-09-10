@@ -11,9 +11,9 @@ import {
 
 describe("slugify", () => {
   it("lowercases and hyphenates a real client filename", () => {
-    expect(slugify("2024-09-SkyMatt-Wedding-Meadowlark-FINALDSC_09180918621")).toBe(
-      "2024-09-sky-matt-wedding-meadowlark-finaldsc-09180918621"
-    );
+    expect(
+      slugify("2024-09-SkyMatt-Wedding-Meadowlark-FINALDSC_09180918621")
+    ).toBe("2024-09-sky-matt-wedding-meadowlark-finaldsc-09180918621");
   });
 
   it("breaks camelCase but keeps runs of capitals and digits intact", () => {
@@ -50,7 +50,10 @@ describe("splitPath / splitExtension", () => {
   });
 
   it("handles windows separators", () => {
-    expect(splitPath("a\\b\\c.jpg")).toEqual({ dirs: ["a", "b"], file: "c.jpg" });
+    expect(splitPath("a\\b\\c.jpg")).toEqual({
+      dirs: ["a", "b"],
+      file: "c.jpg",
+    });
   });
 
   it("keeps dots inside the stem", () => {
@@ -61,15 +64,18 @@ describe("splitPath / splitExtension", () => {
   });
 
   it("treats a dotfile as having no extension", () => {
-    expect(splitExtension(".gitignore")).toEqual({ stem: ".gitignore", ext: "" });
+    expect(splitExtension(".gitignore")).toEqual({
+      stem: ".gitignore",
+      ext: "",
+    });
   });
 });
 
 describe("outputFileName", () => {
   it("applies the suffix and the new extension", () => {
-    expect(outputFileName("DSC_0918.JPG", { suffix: "-optimized", ext: "jpg" })).toBe(
-      "dsc-0918-optimized.jpg"
-    );
+    expect(
+      outputFileName("DSC_0918.JPG", { suffix: "-optimized", ext: "jpg" })
+    ).toBe("dsc-0918-optimized.jpg");
   });
 
   it("accepts a suffix with or without a leading hyphen", () => {
@@ -95,7 +101,9 @@ describe("outputRelativePath", () => {
   });
 
   it("handles a file at the root", () => {
-    expect(outputRelativePath("a.JPG", { suffix: "", ext: "jpg" })).toBe("a.jpg");
+    expect(outputRelativePath("a.JPG", { suffix: "", ext: "jpg" })).toBe(
+      "a.jpg"
+    );
   });
 });
 

@@ -123,7 +123,9 @@ async function main(): Promise<void> {
           `${base}/v1/fit/w_${width},h_${width},al_c,q_90,` +
           `usm_0.66_1.00_0.01,enc_auto/file.jpg`;
         const theirs = await fetchBytes(transform, AVIF_ACCEPT);
-        const rendered = wixFit(meta, width);
+        // The URL below asks for a square box, so model it as one.
+        const box = { width, height: width };
+        const rendered = wixFit(meta, box);
 
         // Reference: the original resampled to the render size and kept
         // lossless. Both encodes are measured against this, so the comparison
@@ -163,7 +165,10 @@ async function main(): Promise<void> {
         for (const quality of QUALITY_SWEEP) {
           try {
             const ours = await renderAsWix(original, meta, {
-              cssWidth: width / WIX_MAX_DPR,
+              css: {
+                width: box.width / WIX_MAX_DPR,
+                height: box.height / WIX_MAX_DPR,
+              },
               accept: AVIF_ACCEPT,
               avifQuality: quality,
             });

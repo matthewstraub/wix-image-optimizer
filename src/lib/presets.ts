@@ -65,7 +65,8 @@ export const PRESETS: readonly Preset[] = [
   {
     id: "standard",
     label: "Standard",
-    blurb: "Blog, content and most galleries. Matches Wix's own stated minimum.",
+    blurb:
+      "Blog, content and most galleries. Matches Wix's own stated minimum.",
     settings: { ...JPEG_DEFAULTS, maxLongEdge: 2560 },
   },
   {

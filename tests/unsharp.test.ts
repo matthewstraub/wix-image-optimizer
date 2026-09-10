@@ -45,7 +45,8 @@ describe("unsharpMask", () => {
   });
 
   it("increases contrast across a hard edge", () => {
-    const build = () => image(32, 8, x => (x < 16 ? [90, 90, 90, 255] : [170, 170, 170, 255]));
+    const build = () =>
+      image(32, 8, x => (x < 16 ? [90, 90, 90, 255] : [170, 170, 170, 255]));
     const original = build();
     const sharpened = unsharpMask(build(), 1);
     // Dark side of the edge gets darker, light side gets lighter.
@@ -77,7 +78,8 @@ describe("unsharpMask", () => {
   });
 
   it("respects the asymmetric overshoot ceilings", () => {
-    const build = () => image(32, 8, x => (x < 16 ? [0, 0, 0, 255] : [255, 255, 255, 255]));
+    const build = () =>
+      image(32, 8, x => (x < 16 ? [0, 0, 0, 255] : [255, 255, 255, 255]));
     const sharpened = unsharpMask(build(), 4, DEFAULT_SHARPEN);
     // A black/white step at amount 4 would blow far past the ceilings if they
     // were not enforced; clamping keeps it inside the byte range regardless.
@@ -95,7 +97,8 @@ describe("unsharpMask", () => {
   });
 
   it("scales with amount", () => {
-    const build = () => image(32, 8, x => (x < 16 ? [90, 90, 90, 255] : [170, 170, 170, 255]));
+    const build = () =>
+      image(32, 8, x => (x < 16 ? [90, 90, 90, 255] : [170, 170, 170, 255]));
     const original = at(build(), 16, 4);
     const light = at(unsharpMask(build(), 0.5), 16, 4);
     const heavy = at(unsharpMask(build(), 2), 16, 4);
@@ -104,7 +107,8 @@ describe("unsharpMask", () => {
   });
 
   it("preserves hue by moving all three channels together", () => {
-    const build = () => image(32, 8, x => (x < 16 ? [40, 80, 120, 255] : [120, 160, 200, 255]));
+    const build = () =>
+      image(32, 8, x => (x < 16 ? [40, 80, 120, 255] : [120, 160, 200, 255]));
     const before = build();
     const after = unsharpMask(build(), 1);
     const p = (4 * 32 + 16) * 4;

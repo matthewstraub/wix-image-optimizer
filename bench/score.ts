@@ -93,7 +93,9 @@ export class Ssimulacra2 {
   score(referencePng: string, candidatePng: string): Promise<number> {
     return new Promise((resolve, reject) => {
       this.waiting.push({ resolve, reject });
-      this.child.stdin.write(`${JSON.stringify([referencePng, candidatePng])}\n`);
+      this.child.stdin.write(
+        `${JSON.stringify([referencePng, candidatePng])}\n`
+      );
     });
   }
 

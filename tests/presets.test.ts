@@ -69,7 +69,9 @@ describe("clampSettings", () => {
   const base = getPreset("standard").settings;
 
   it("clamps the long edge to Wix's transform ceiling", () => {
-    expect(clampSettings({ ...base, maxLongEdge: 12000 }).maxLongEdge).toBe(5000);
+    expect(clampSettings({ ...base, maxLongEdge: 12000 }).maxLongEdge).toBe(
+      5000
+    );
   });
 
   it("clamps quality into 1-100", () => {

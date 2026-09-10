@@ -86,10 +86,22 @@ export function wixEffectiveQuality(
   return wixQualityForArea(area, png);
 }
 
-/** Device pixels Wix will request for a CSS width, given their DPR cap. */
-export function wixDevicePixels(cssWidth: number, dpr: number): number {
-  return Math.round(cssWidth * Math.min(dpr, WIX_MAX_DPR));
+/** The device-pixel box Wix will request for a CSS box, given their DPR cap. */
+export function wixDeviceBox(css: Size, dpr: number): Size {
+  const k = Math.min(dpr, WIX_MAX_DPR);
+  return {
+    width: Math.round(css.width * k),
+    height: Math.round(css.height * k),
+  };
 }
+
+/**
+ * Wix floors, but a scale derived by division can land a hair under an exact
+ * integer (400/1824*1824 is 400.00000000000006 one way and 399.99999999 the
+ * other). Absorb that before flooring so the result is not a pixel short for
+ * reasons of binary arithmetic rather than of Wix's behaviour.
+ */
+const floorish = (x: number) => Math.max(1, Math.floor(x + 1e-9));
 
 /**
  * The size Wix's `fit` transform produces: scale into the requested box
@@ -106,22 +118,29 @@ export function wixDevicePixels(cssWidth: number, dpr: number): number {
  * Being one pixel out is not cosmetic here: the metrics compare arrays and
  * refuse to score mismatched shapes.
  */
-export function wixFit(source: Size, requestedWidth: number): Size {
-  const width = Math.min(requestedWidth, source.width);
-  const scale = width / source.width;
-  let w = Math.max(1, Math.floor(source.width * scale));
-  let h = Math.max(1, Math.floor(source.height * scale));
+export function wixFit(source: Size, box: Size): Size {
+  // Both dimensions bind. The URL Wix emits carries w_ and h_ together, so a
+  // portrait photo in a wide hero is limited by height, not width — modelling
+  // only the width turns a 3578x5377 frame into a 22 megapixel render that
+  // nothing would ever ask for.
+  const scale = Math.min(
+    box.width / source.width,
+    box.height / source.height,
+    1
+  );
+  let w = floorish(source.width * scale);
+  let h = floorish(source.height * scale);
 
   const edge = Math.max(w, h);
   if (edge > WIX_MAX_TRANSFORM_EDGE) {
     const k = WIX_MAX_TRANSFORM_EDGE / edge;
-    w = Math.max(1, Math.floor(w * k));
-    h = Math.max(1, Math.floor(h * k));
+    w = floorish(w * k);
+    h = floorish(h * k);
   }
   if (w * h > WIX_SAFE_AREA) {
     const k = Math.sqrt(WIX_SAFE_AREA / (w * h));
-    w = Math.max(1, Math.floor(w * k));
-    h = Math.max(1, Math.floor(h * k));
+    w = floorish(w * k);
+    h = floorish(h * k);
   }
   return { width: w, height: h };
 }
@@ -177,8 +196,8 @@ export interface WixDelivery {
 
 export interface WixDeliveryRequest {
   source: Size;
-  /** CSS pixels the image occupies on the page. */
-  cssWidth: number;
+  /** The CSS box the image occupies on the page. */
+  css: Size;
   dpr?: number;
   accept?: string;
   /** An explicit `q_`, which AVIF's `quality_auto` will override anyway. */
@@ -201,8 +220,8 @@ export const WIX_AUTO_QUALITY = 75;
 /** Resolve a page context into everything needed to reproduce the delivery. */
 export function wixDelivery(req: WixDeliveryRequest): WixDelivery {
   const dpr = req.dpr ?? WIX_MAX_DPR;
-  const requestedWidth = wixDevicePixels(req.cssWidth, dpr);
-  const rendered = wixFit(req.source, requestedWidth);
+  const requested = wixDeviceBox(req.css, dpr);
+  const rendered = wixFit(req.source, requested);
   const format = wixWireFormat(req.accept ?? "image/avif,image/webp,*/*");
   const area = rendered.width * rendered.height;
   const qualityAuto = format === "avif";
@@ -223,9 +242,13 @@ export function wixDelivery(req: WixDeliveryRequest): WixDelivery {
  * blog image, and a gallery thumbnail, all at Wix's 2x DPR ceiling.
  */
 export const RENDER_CONTEXTS = [
-  { id: "hero", label: "Full-bleed hero", cssWidth: 1920 },
-  { id: "content", label: "Blog / in-content", cssWidth: 960 },
-  { id: "thumb", label: "Gallery thumbnail", cssWidth: 400 },
+  { id: "hero", label: "Full-bleed hero", css: { width: 1920, height: 1080 } },
+  {
+    id: "content",
+    label: "Blog / in-content",
+    css: { width: 960, height: 720 },
+  },
+  { id: "thumb", label: "Gallery thumbnail", css: { width: 400, height: 400 } },
 ] as const;
 
 export type RenderContextId = (typeof RENDER_CONTEXTS)[number]["id"];

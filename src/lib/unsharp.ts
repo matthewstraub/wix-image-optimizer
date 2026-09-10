@@ -166,7 +166,14 @@ export function unsharpMask(
 export function toLibvipsSharpen(
   options: SharpenOptions = DEFAULT_SHARPEN,
   amount = 1
-): { sigma: number; x1: number; y2: number; y3: number; m1: number; m2: number } {
+): {
+  sigma: number;
+  x1: number;
+  y2: number;
+  y3: number;
+  m1: number;
+  m2: number;
+} {
   const k = 100 / 255;
   return {
     sigma: options.sigma,
