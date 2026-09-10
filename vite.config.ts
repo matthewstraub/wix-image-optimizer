@@ -22,6 +22,13 @@ export default defineConfig({
       "@jsquash/webp",
       "@jsquash/avif",
     ],
+    // These two are dynamic imports inside the worker, so Vite's startup
+    // scanner never reaches them — it crawls from the HTML entry and does not
+    // follow `new Worker(new URL(...))`. Left to discover them on first use,
+    // it re-optimises and forces a full page reload, which in this app lands
+    // in the middle of a batch and throws the queue away. Naming them here
+    // gets them pre-bundled at boot instead.
+    include: ["libheif-js/wasm-bundle", "utif2"],
   },
   worker: {
     format: "es",
