@@ -18,7 +18,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "bench:verify": "tsx bench/verify-live.ts"
   },
   "dependencies": {
     "@jsquash/avif": "^2.1.1",

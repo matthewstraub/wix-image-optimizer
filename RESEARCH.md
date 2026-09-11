@@ -255,6 +255,75 @@ smaller, 6.4 seconds.**
 
 ---
 
+## Verified on a live site
+
+Everything above reasons about an emulated Wix. This section checks it against
+a real one: the same photograph uploaded twice to a client site, once
+untouched and once through the optimiser. Reproduce with
+`npm run bench:verify -- <original-media-id> <optimized-media-id>`.
+
+The subject is a stone wall — dense, high-frequency masonry texture, about the
+hardest thing you can hand a codec. Worth keeping in mind: this is one image,
+and an unusually punishing one.
+
+|           | Stored on Wix  |                   |
+| --------- | -------------- | ----------------- |
+| Original  | PNG 3321x2148  | **12.44 MB**      |
+| Optimised | JPEG 2560x1656 | **1.03 MB**       |
+|           |                | **12.0x smaller** |
+
+The storage claim holds. What a visitor receives is more interesting, and it
+splits by context:
+
+| Context                       | Wix serves from original | from optimised       | Cost    |
+| ----------------------------- | ------------------------ | -------------------- | ------- |
+| Blog / in-content (1919x1241) | 635 KB, quality 6.7      | 584 KB, quality 68.1 | **+61** |
+| Full-bleed hero (3321x2148)   | 1178 KB, quality 74.7    | 684 KB, quality 28.8 | **-46** |
+
+The in-content result is not a typo, and it is not a metric artifact — DSSIM
+agrees independently, putting the optimised delivery 9x closer to the ideal
+(0.0028 against 0.0251). **Uploading the optimised file gives visitors a
+better image than uploading the original.** Wix has to reduce the 3321px
+original by 1.73x with its own cheap resampler and its unsharp mask, and on
+texture like this that does real damage. From our upload it only has to reduce
+by 1.33x, because we already did the large reduction properly with lanczos3.
+This is the same effect calibration found at harsher reductions, showing up in
+the wild.
+
+The hero result is a genuine cost, and it comes from the source being small to
+begin with. At 3321px this original is barely above the 2560px Standard
+target, so Wix serves it at native resolution while our upload has to be
+upscaled by the browser to fill the same box. A 6048px DSLR frame does not
+behave this way — there, 2560px still discards only detail that Wix would
+never serve.
+
+**The practical lesson: match the preset to the source, not just to the slot.**
+For this image Hero would have been the right choice — at 3840px it leaves a
+3321px source untouched, so there is no resolution loss at all, and it still
+saves 87.4%:
+
+| Preset   | Output                | Stored | Saving |
+| -------- | --------------------- | ------ | ------ |
+| Standard | 2560x1656             | 1.0 MB | 91.6%  |
+| Hero     | 3321x2148 (unchanged) | 1.6 MB | 87.4%  |
+
+600 KB more for a file that cannot lose anything.
+
+### A bug this found
+
+The first run of this check produced a +92.8 "improvement" from optimising,
+which is impossible. The cause was `wixFit` nudging by 1e-9 before flooring —
+added on the theory that a scale factor landing a hair under an integer was
+floating-point noise. It is not. A 3321x2148 source fitted into a 1920x1440
+box gives a width of 1919.9999999999998, and Wix serves it at 1919. The
+epsilon produced 1920, and a one-pixel disagreement is enough to wreck a
+perceptual score. Removed, with a regression test.
+
+It never affected the benchmark, where both sides of every comparison came
+from the same function and agreed with each other. It only surfaced the moment
+the emulator was held against something real — which is the argument for
+doing that.
+
 ## Things that did not go the way the literature suggests
 
 - **Sharpen after downscaling.** Correct in general, wrong here, and the

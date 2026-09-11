@@ -225,3 +225,26 @@ describe("wixDelivery", () => {
     expect(d.applyUsm).toBe(false);
   });
 });
+
+describe("wixFit float behaviour", () => {
+  it("floors a width that lands a hair under an integer, as Wix does", () => {
+    // 3321 * (1920/3321) is 1919.9999999999998 in IEEE754, and Wix serves
+    // that asset at 1919. Nudging by an epsilon first gives 1920 and puts
+    // every comparison against a live derivative one pixel out.
+    expect(
+      wixFit({ width: 3321, height: 2148 }, { width: 1920, height: 1440 })
+    ).toEqual({
+      width: 1919,
+      height: 1241,
+    });
+  });
+
+  it("still never returns a zero dimension", () => {
+    const out = wixFit(
+      { width: 10000, height: 3 },
+      { width: 100, height: 100 }
+    );
+    expect(out.width).toBeGreaterThan(0);
+    expect(out.height).toBeGreaterThan(0);
+  });
+});

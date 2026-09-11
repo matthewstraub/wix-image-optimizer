@@ -101,7 +101,17 @@ export function wixDeviceBox(css: Size, dpr: number): Size {
  * other). Absorb that before flooring so the result is not a pixel short for
  * reasons of binary arithmetic rather than of Wix's behaviour.
  */
-const floorish = (x: number) => Math.max(1, Math.floor(x + 1e-9));
+/**
+ * Plain floor, deliberately without an epsilon.
+ *
+ * An earlier version nudged by 1e-9 first, on the theory that a scale factor
+ * landing a hair under an integer was floating-point noise rather than intent.
+ * Measurement says otherwise: a 3321x2148 source fitted into a 1920x1440 box
+ * gives a width of 1919.9999999999998, and Wix serves it at 1919. The epsilon
+ * produced 1920 and put every comparison against a live derivative one pixel
+ * out, which is enough to wreck a perceptual score.
+ */
+const floorish = (x: number) => Math.max(1, Math.floor(x));
 
 /**
  * The size Wix's `fit` transform produces: scale into the requested box
