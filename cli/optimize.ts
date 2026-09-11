@@ -10,8 +10,8 @@
  * would rather point a command at a folder than drag 8 GB into a tab.
  */
 
-import { mkdir, readdir, stat, writeFile } from "node:fs/promises";
-import { dirname, join, relative, resolve, sep } from "node:path";
+import { mkdir, readdir, realpath, stat, writeFile } from "node:fs/promises";
+import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { parseArgs } from "node:util";
 import { cpus } from "node:os";
 import sharp from "sharp";
@@ -61,35 +61,60 @@ Options:
   --help
 `.trim();
 
-interface Job {
+export interface Job {
   absolute: string;
   relativePath: string;
   bytes: number;
 }
 
-async function walk(root: string): Promise<Job[]> {
+export async function walk(root: string): Promise<Job[]> {
   const jobs: Job[] = [];
-  async function visit(dir: string): Promise<void> {
+
+  /**
+   * Resolved paths of the directories currently open above us. A symlinked
+   * directory can point back up the tree, and without this the walk recurses
+   * until it runs out of stack.
+   *
+   * Deliberately an ancestor stack rather than a set of everywhere visited:
+   * deduping globally would mean a folder reachable both directly and through
+   * a symlink gets walked once and skipped the other time, so whichever the
+   * OS happened to list second would silently lose its photos. Mirroring the
+   * tree the user actually has matters more than avoiding duplicate work.
+   */
+  async function visit(dir: string, ancestors: Set<string>): Promise<void> {
+    const key = await realpath(dir).catch(() => dir);
+    if (ancestors.has(key)) return;
+    const nested = new Set(ancestors).add(key);
+
     const entries = await readdir(dir, { withFileTypes: true });
     for (const entry of entries) {
       const full = join(dir, entry.name);
-      if (entry.isDirectory()) {
-        if (entry.name.startsWith(".")) continue;
-        await visit(full);
+      if (entry.name.startsWith(".")) continue;
+
+      // stat() follows symlinks where the Dirent does not: entry.isFile() is
+      // false for a symlink, so testing it alone drops linked photos on the
+      // floor without a word. Silently skipping a client's file is the worst
+      // way to be wrong here.
+      const info = await stat(full).catch(() => null);
+      if (!info) continue; // broken link, or vanished mid-walk
+
+      if (info.isDirectory()) {
+        await visit(full, nested);
         continue;
       }
-      if (!entry.isFile() || entry.name.startsWith(".")) continue;
+      if (!info.isFile()) continue;
+
       const ext = entry.name.split(".").pop()?.toLowerCase() ?? "";
       if (!SUPPORTED.has(ext)) continue;
-      const { size } = await stat(full);
       jobs.push({
         absolute: full,
         relativePath: relative(root, full).split(sep).join("/"),
-        bytes: size,
+        bytes: info.size,
       });
     }
   }
-  await visit(root);
+
+  await visit(root, new Set());
   jobs.sort((a, b) => a.relativePath.localeCompare(b.relativePath));
   return jobs;
 }
@@ -263,4 +288,7 @@ function report(
   );
 }
 
-await main();
+// Only run as a CLI, so tests can import `walk` without executing a batch.
+if (process.argv[1] && import.meta.url.endsWith(basename(process.argv[1]))) {
+  await main();
+}
